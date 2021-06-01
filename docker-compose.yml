@@ -1,0 +1,33 @@
+version: '3'
+services:  
+
+  db:
+    image: postgres:12
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=postgres
+    ports:
+      - "5432:5432"
+
+  pgbouncer:
+    image: edoburu/pgbouncer
+    environment:
+       - DB_USER=postgres
+       - DB_PASSWORD=postgres
+       - DB_HOST=db
+       - DB_NAME=postgres 
+       - POOL_MODE=session
+       - ADMIN_USERS=postgres
+       - MAX_CLIENT_CONN=10000
+    volumes: 
+      - "./pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini:ro"
+    ports:
+      - "6543:5432"
+    depends_on:
+      - db
+
+volumes:
+  pg_data:
