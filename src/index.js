@@ -1,4 +1,4 @@
-const sequelize = require("./db");
+const { sequelize, User } = require("../models");
 
 // Begin reading from stdin so the process does not exit.
 process.stdin.resume();
@@ -14,13 +14,72 @@ const statistic = {
   queriesPerSecond: 0,
 };
 
-function testQuery() {
-  return sequelize.query("SELECT * FROM pg_stat_activity;");
+async function testQuery() {
+  return new Promise(async (resolve, reject) => {
+    const transaction = await sequelize.transaction();
+    const id = Math.floor(Math.random() * 2000) + 1;
+    try {
+      await User.update(
+        {
+          firstName: "Bart",
+          lastName: "Simpson",
+        },
+        {
+          where: {
+            id,
+          },
+          transaction,
+        }
+      );
+
+      // await User.destroy(
+      //   {
+      //     where: {
+      //       id,
+      //     },
+      //     transaction,
+      //   }
+      // );
+
+      await new Promise((resolve) => {
+        setTimeout(() => {
+          resolve();
+        }, Math.floor(Math.random() * 10) + 1);
+      });
+
+      if (id <= 1000) {
+        throw new Error("test error");
+      }
+
+      await User.update(
+        {
+          firstName: "Lisa",
+          lastName: "Simpson",
+        },
+        {
+          where: {
+            id,
+          },
+          transaction,
+        }
+      );
+
+      // If the execution reaches this line, no errors were thrown.
+      // We commit the transaction.
+      await transaction.commit();
+      resolve(true);
+    } catch (error) {
+      // If the execution reaches this line, an error was thrown.
+      // We rollback the transaction.
+      await transaction.rollback();
+      reject(error);
+    }
+  });
 }
 
 function setImmediatePromise() {
   return new Promise((resolve) => {
-    if (queue.length < (process.env.MAX_QUEUE_LENGTH || 100)) {
+    if (queue.length < (process.env.MAX_QUEUE_LENGTH || 1000)) {
       queue.push(true);
       statistic.queriesCount++;
       testQuery()
@@ -55,7 +114,7 @@ function handleStop() {
         ((statistic.endTime - statistic.startTime) / 1000)
     );
     console.log("DB connection shut down gracefully");
-    console.log('done', JSON.stringify(statistic, " ", 4));
+    console.log("done", JSON.stringify(statistic, " ", 4));
     process.exit(0);
   });
 }

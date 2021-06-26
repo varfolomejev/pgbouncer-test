@@ -5,6 +5,10 @@
   "main": "index.js",
   "scripts": {
     "start": "pm2 start -i max src/index.js",
+    "migrate": "npx sequelize-cli db:migrate",
+    "migrate:undo": "npx sequelize-cli db:migrate:undo:all",
+    "seed:all": "npx sequelize-cli db:seed:all",
+    "seed:undo": "npx sequelize-cli db:seed:undo:all",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -19,8 +23,12 @@
   },
   "homepage": "https://github.com/varfolomejev/pgbouncer-test#readme",
   "dependencies": {
+    "faker": "^5.5.3",
     "pg": "^8.6.0",
     "pg-hstore": "^2.3.3",
     "sequelize": "^6.6.2"
+  },
+  "devDependencies": {
+    "sequelize-cli": "^6.2.0"
   }
 }
